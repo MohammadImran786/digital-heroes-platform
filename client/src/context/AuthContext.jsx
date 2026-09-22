@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { getMemberDashboard } from "../services/memberService";
 
 const AuthContext = createContext(null);
 
@@ -9,46 +10,6 @@ export function AuthProvider({ children }) {
   const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const loadProfile = async (currentUser) => {
-    if (!currentUser) {
-      setProfile(null);
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", currentUser.id)
-      .single();
-
-    if (error) {
-      console.error("Error loading profile:", error.message);
-      setProfile(null);
-      return;
-    }
-
-    setProfile(data);
-  };
-
-  const getSubscription = async (currentUser) => {
-    if (!currentUser) {
-      return null;
-    }
-
-    const { data, error } = await supabase
-      .from("subscriptions")
-      .select("*")
-      .eq("user_id", currentUser.id)
-      .maybeSingle();
-
-    if (error) {
-      console.error("Error loading subscription:", error.message);
-      return null;
-    }
-
-    return data;
-  };
-
   useEffect(() => {
     const initializeAuth = async () => {
       const {
@@ -56,14 +17,17 @@ export function AuthProvider({ children }) {
       } = await supabase.auth.getSession();
 
       const currentUser = session?.user ?? null;
-
       setUser(currentUser);
 
       if (currentUser) {
-        await loadProfile(currentUser);
-
-        const userSubscription = await getSubscription(currentUser);
-        setSubscription(userSubscription);
+        try {
+          const data = await getMemberDashboard();
+          setProfile(data.profile);
+          setSubscription(data.subscription);
+        } catch (error) {
+          console.error("Member data loading error:", error.message);
+          setSubscription(null);
+        }
       }
 
       setLoading(false);
@@ -72,17 +36,21 @@ export function AuthProvider({ children }) {
     initializeAuth();
 
     const {
-      data: { subscription: authListener },
+      data: { subscription: authSubscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const currentUser = session?.user ?? null;
-
       setUser(currentUser);
 
       if (currentUser) {
-        await loadProfile(currentUser);
-
-        const userSubscription = await getSubscription(currentUser);
-        setSubscription(userSubscription);
+        try {
+          const data = await getMemberDashboard();
+          setProfile(data.profile);
+          setSubscription(data.subscription);
+        } catch (error) {
+          console.error("Member data loading error:", error.message);
+          setProfile(null);
+          setSubscription(null);
+        }
       } else {
         setProfile(null);
         setSubscription(null);
@@ -90,61 +58,15 @@ export function AuthProvider({ children }) {
     });
 
     return () => {
-      authListener.unsubscribe();
+      authSubscription.unsubscribe();
     };
   }, []);
-
-  const signup = async ({ fullName, email, password }) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-        },
-      },
-    });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return data;
-  };
-
-  const login = async ({ email, password }) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return data;
-  };
-
-  const logout = async () => {
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    setUser(null);
-    setProfile(null);
-    setSubscription(null);
-  };
 
   const value = {
     user,
     profile,
     subscription,
     loading,
-    signup,
-    login,
-    logout,
   };
 
   return (

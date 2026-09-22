@@ -9,6 +9,7 @@ import { stripeWebhook } from "./controllers/stripeWebhookController.js";
 import drawRoutes from "./routes/drawRoutes.js";
 import winnerRoutes from "./routes/winnerRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import memberRoutes from "./routes/memberRoutes.js";
 
 const app = express();
 
@@ -49,6 +50,7 @@ app.use("/api/subscription", subscriptionRoutes);
 app.use("/api/draws", drawRoutes);
 app.use("/api/winners", winnerRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/member", memberRoutes);
 
 const PORT = process.env.PORT || 5000;
 
