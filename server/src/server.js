@@ -12,12 +12,29 @@ import adminRoutes from "./routes/adminRoutes.js";
 
 const app = express();
 
+// --- UPDATED DYNAMIC CORS MIDDLEWARE ---
+const allowedOrigins = [
+  "https://digital-heroes-platform-orcin.vercel.app",
+  "https://digital-heroes-platform.vercel.app",
+  "http://localhost:5173",
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: function (origin, callback) {
+      // Postman, server-to-server, ya allowed domains ko approve karein
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, true); // Dev/Demo test ke liye cross-origin requests allow karein
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
 
 // Stripe webhook must receive the raw body
 app.post(
@@ -44,6 +61,6 @@ app.use("/api/admin", adminRoutes);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, "0.0.0.0",() => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
