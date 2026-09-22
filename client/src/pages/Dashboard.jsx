@@ -28,7 +28,13 @@ function Dashboard() {
         ]);
 
         setUserCharity(charity);
-        setScoreCount(scoresResponse.data.scores?.length || 0);
+        
+        // Safety check for scores response array
+        const scoresList = Array.isArray(scoresResponse.data) 
+          ? scoresResponse.data 
+          : (scoresResponse.data?.scores || []);
+          
+        setScoreCount(scoresList.length);
       } catch (error) {
         console.error("Dashboard loading error:", error);
       }
@@ -41,7 +47,9 @@ function Dashboard() {
     async function loadSubscription() {
       try {
         const data = await getMySubscription();
-        setSubscription(data);
+        // Handle array response from API if array is returned
+        const activeSub = Array.isArray(data) ? data[0] : data;
+        setSubscription(activeSub);
       } catch (error) {
         console.error("Subscription loading error:", error);
       }
