@@ -22,17 +22,8 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Postman, server-to-server, ya allowed domains ko approve karein
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(null, true); // Dev/Demo test ke liye cross-origin requests allow karein
-      }
-    },
+    origin: true, // Sabhi origins allow honge
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
