@@ -43,20 +43,20 @@ function Dashboard() {
     loadDashboard();
   }, [user]);
 
-  useEffect(() => {
-    async function loadSubscription() {
-      try {
-        const data = await getMySubscription();
-        // Handle array response from API if array is returned
-        const activeSub = Array.isArray(data) ? data[0] : data;
-        setSubscription(activeSub);
-      } catch (error) {
-        console.error("Subscription loading error:", error);
-      }
+// 1. Subscription Fetch Fix (Dashboard.jsx)
+useEffect(() => {
+  async function loadSubscription() {
+    try {
+      const response = await getMySubscription();
+      // Backend returns { success: true, subscription: { ... } }
+      setSubscription(response?.data?.subscription || response?.subscription || response);
+    } catch (error) {
+      console.error("Subscription loading error:", error);
     }
+  }
 
-    loadSubscription();
-  }, []);
+  loadSubscription();
+}, []);
 
   const handleLogout = async () => {
     await logout();

@@ -270,13 +270,17 @@ function Scores() {
                       </p>
 
                       <p className="text-sm text-gray-500 mt-1">
-                        {new Date(
-                          `${item.score_date}T00:00:00`
-                        ).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}
+                        {item.score_date
+                          ? new Date(
+                              item.score_date.includes("T")
+                                ? item.score_date
+                                : `${item.score_date}T00:00:00`
+                            ).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })
+                          : "N/A"}
                       </p>
                     </div>
                   </div>
